@@ -1,0 +1,30 @@
+package PB;
+message head
+{ 
+	required int32 id = 1;
+	required int32 size = 2;
+}
+
+message notify
+{
+	required string str = 1;
+}
+
+message login
+{
+	required string account = 2;
+	required string pwd_md5 = 3;
+}
+
+message people 
+{
+	required int32 id 	= 1;
+	required string name 	= 2;
+	required float power 	= 3;
+	message skill 
+	{
+		required int32 skillid		= 1;
+		required string skillname 	= 2; 
+	}
+	repeated skill skills 	= 4;
+}
