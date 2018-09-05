@@ -6,11 +6,12 @@
 #include <unistd.h>
 #include <iostream>
 #include "net.pb.h"
+#include "common.h"
 
 #define PORT 8888 
-#define BUFFER_SIZE 10240
-#define MAX_ALLOWED_CLIENT 10240
+#define MAX_ALLOWED_CLIENT 1024
 #define HEAD_LEN (8)
+#define BUFFER_SIZE GUC_BUFFER_SIZE 
 #define RBLEN(t,h) (BUFFER_SIZE-(BLEN(t,h))-1) 
 #define BLEN(t,h) ((t-h+BUFFER_SIZE)%BUFFER_SIZE)
 #define ISFULL(t,h) (((t+1)%BUFFER_SIZE)==h)
@@ -27,6 +28,63 @@ long cnt = 0;
 
 namespace GUC
 {
+	class pack_mgr
+	{
+		public:
+			pack_mgr();
+			~pack_mgr();
+ 
+			typedef bool (pack_mgr::*PH)(int ,byte* ,int);
+			bool process(int id,byte *buf,int len);
+		private:
+			bool test_guc_people_handle(int id,byte* buf,int len);
+		private:
+			std::map<PB::c2sid,PH> handles_map;	
+			typedef std::map<PB::c2sid,PH>::iterator def_itr;
+	};
+	bool pack_mgr::process(int id,byte* buf,int len)
+	{
+		std::cout<<"handle id:"<<id<<std::endl;
+		def_itr itr = handles_map.find((PB::c2sid)id);
+		if(itr != handles_map.end())
+			(this->*handles_map[(PB::c2sid)id])(id,buf,len);
+		else 
+			std::cout<<"handle not find id:"<<id<<std::endl;
+		
+	}
+	pack_mgr::pack_mgr()
+ 	{
+		handles_map[PB::guc_test_people] = &pack_mgr::test_guc_people_handle;
+	}
+	pack_mgr::~pack_mgr()
+	{
+	}
+	bool pack_mgr::test_guc_people_handle(int id,byte* buf,int len)
+	{
+		std::string bodybuf;
+		bodybuf.append(buf,len);
+		PB::people p;
+		p.ParseFromString(bodybuf);
+		if(cnt%10000==0)
+		{
+
+			std::cout<<"recv process info:" 
+				<< "id:"<< p.id()
+				<< " name:"<< p.name().data() 
+				<< " power:"<< p.power()
+				<<" len:"<<len
+				<<std::endl;
+			for(int i=0;i<p.skills_size();++i)
+			{
+				const PB::people::skill &s = p.skills(i);
+				std::cout<<"skillId:"<<s.skillid()
+					<<"skillname:"<<s.skillname()
+					<<std::endl;
+			}
+		}
+		return true;
+	}
+
 	class session
 	{
 		public:
@@ -38,6 +96,7 @@ namespace GUC
 			void init(struct ev_io* w_client,ev_cb read,int fd,int revents);
 			void start(struct ev_loop* loop,struct ev_io* w_client);
 		private:
+			pack_mgr package_handler;	
 			byte recvbuff[BUFFER_SIZE];
 			int tail;
 			int head;
@@ -77,6 +136,12 @@ namespace GUC
 		//正常的recv
 		ssize_t read=0;
 		int free_size = process_packet();
+		if(free_size<0)
+		{
+			std::cout<<"data_len > BUFFER_SIZE data_len:"<<std::endl;
+			return 0;
+		}
+
 		int read_len_1 =  BUFFER_SIZE-tail-1;
 		if(tail==head)
 		{
@@ -90,7 +155,7 @@ namespace GUC
 			if(head == 0)
 				read_len_1 -= 1;
 		}
-		else 
+		else if(tail<head)
 		{
 			read_len_1 = head - tail - 1;
 		}
@@ -120,13 +185,9 @@ namespace GUC
 			std::cout<<"read error"<<std::endl;
 			return read;
 		}
-
 		if(read == 0)
 		{
 			std::cout<<"client disconnected."<<std::endl;
-			//ev_io_stop(loop, watcher);
-			//free(watcher);
-			//如果客户端断开连接，释放响应的资源，并且关闭监听
 			return read;
 		}
 
@@ -147,22 +208,20 @@ namespace GUC
 		if(BLEN(tail,head)< HEAD_LEN)
 			return RBLEN(tail,head);
 
-		byte h[HEAD_LEN]={0};
-		// for 改为 memset
-		//for(int i=head,j=0;j<HEAD_LEN;++j)
+		GUC::head h;
+		char buff_h[HEAD_LEN] = {0};
+		for(int i=0;i<HEAD_LEN;++i)
 		{
-			//h[j] = recvbuff[INDEX(i++)];
-			memcpy(h,recvbuff+head,HEAD_LEN); 
+			buff_h[i] = recvbuff[INDEX(head+i)];
 		}
-	
-		//PB::head header;
-		//std::string hStr ;
-		//hStr.append(h);
-		//header.ParseFromString(hStr);
+		memcpy(&h,buff_h,HEAD_LEN); 
 
-		int len = *(int*)h;//header.size();
-		std::cout<<"headlen:"<<len<<std::endl;
-		std::cout<<"headId:"<<*(int*)(h+sizeof(int))<<std::endl;
+		int len = h.data_len;
+		//std::cout<<"headlen:"<<len<<std::endl;
+		//std::cout<<"headId:"<<h.id<<std::endl;
+		if(len>BUFFER_SIZE)
+			return -1;
+
 		if(BLEN(tail,head)< len+HEAD_LEN)
 			return RBLEN(tail,head);
 
@@ -181,31 +240,9 @@ namespace GUC
 			}
 		}while(0);
 		OUT(head,len);
-		std::string bodyStr;
-		bodyStr.append(buf,len);
-		PB::people p;
-		p.ParseFromString(bodyStr);
-		cnt++;
-		if(cnt%10000==0 || cnt%10001==0)
-		{
-			std::cout<<"recv process info:" 
-				<< "id:"<< p.id()
-				<< " name:"<< p.name().data() 
-				<< " power:"<< p.power()
-				<<" tail:"<<tail
-				<<" head:"<<head
-				<<" len:"<<len
-				<<" recvcnt:"<<cnt
-				<<std::endl;
-			for(int i=0;i<p.skills_size();++i)
-			{
-				const PB::people::skill &s = p.skills(i);
-				std::cout<<"skillId:"<<s.skillid()
-					<<"skillname:"<<s.skillname()
-					<<std::endl;
-			}
-	
-		}
+		// process
+		package_handler.process(h.id,buf,len);
+
 		return RBLEN(tail,head);
 	}  
 
@@ -369,7 +406,7 @@ void read_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	{
 		readcnt = se->read_stream();
 	}
-	if(0 == readcnt)
+	if(0 >= readcnt)
 		service->freelibev(watcher->fd);
 }
 

@@ -1,9 +1,19 @@
 package PB;
-message head
-{ 
-	required int32 id = 1;
-	required int32 size = 2;
-}
+
+enum c2sid
+{
+    guc_c2s_begin = 0;
+ // 1-1000 sytem
+    guc_test_notify = 1;
+	guc_test_people = 2;
+
+ // 2000-max logic
+	guc_c2s_login =2000; 
+
+
+ 	guc_c2s_end = 88888;
+
+} 
 
 message notify
 {
