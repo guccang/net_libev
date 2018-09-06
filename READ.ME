@@ -2,6 +2,12 @@
 2: 下载protobuf-2.5.0
 3: 运行make生成ev1 client
 4：运行ev1,client，发送接收消息
+5:
+ev1.cpp:57:36: error: cannot convert ‘GUC::pack_mgr::test_guc_people_handle’ from type ‘bool (GUC::pack_mgr::)(int, byte*, int) {aka bool (GUC::pack_mgr::)(int, char*, int)}’ to type ‘std::map<PB::c2sid, bool (*)(int, char*, int)>::mapped_type {aka bool (*)(int, char*, int)}’
+6: 读取head时错误，head末尾时，使用了memcopy越界读取了。
+   读取head时和读取data时要一样，可能两次memcopy,head很小，使用for循环来做
+7:c++ 函数指针 类函数指针 类静态函数指针 类虚函数指针 
+ http://www.runoob.com/w3cnote/cpp-func-pointer.html
 
 
 
@@ -28,6 +34,3 @@ ldconfg
 
 
 Q2:git clone问题。使用ssh权限错误的话，使用htpps方式即可
-
-
-

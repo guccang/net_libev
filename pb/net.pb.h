@@ -23,6 +23,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
+#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
 
@@ -33,105 +34,34 @@ void  protobuf_AddDesc_net_2eproto();
 void protobuf_AssignDesc_net_2eproto();
 void protobuf_ShutdownFile_net_2eproto();
 
-class head;
 class notify;
 class login;
 class people;
 class people_skill;
 
-// ===================================================================
-
-class head : public ::google::protobuf::Message {
- public:
-  head();
-  virtual ~head();
-
-  head(const head& from);
-
-  inline head& operator=(const head& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const head& default_instance();
-
-  void Swap(head* other);
-
-  // implements Message ----------------------------------------------
-
-  head* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const head& from);
-  void MergeFrom(const head& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required int32 id = 1;
-  inline bool has_id() const;
-  inline void clear_id();
-  static const int kIdFieldNumber = 1;
-  inline ::google::protobuf::int32 id() const;
-  inline void set_id(::google::protobuf::int32 value);
-
-  // required int32 size = 2;
-  inline bool has_size() const;
-  inline void clear_size();
-  static const int kSizeFieldNumber = 2;
-  inline ::google::protobuf::int32 size() const;
-  inline void set_size(::google::protobuf::int32 value);
-
-  // @@protoc_insertion_point(class_scope:PB.head)
- private:
-  inline void set_has_id();
-  inline void clear_has_id();
-  inline void set_has_size();
-  inline void clear_has_size();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::int32 id_;
-  ::google::protobuf::int32 size_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_net_2eproto();
-  friend void protobuf_AssignDesc_net_2eproto();
-  friend void protobuf_ShutdownFile_net_2eproto();
-
-  void InitAsDefaultInstance();
-  static head* default_instance_;
+enum c2sid {
+  guc_c2s_begin = 0,
+  guc_test_notify = 1,
+  guc_test_people = 2,
+  guc_c2s_login = 2000,
+  guc_c2s_end = 88888
 };
-// -------------------------------------------------------------------
+bool c2sid_IsValid(int value);
+const c2sid c2sid_MIN = guc_c2s_begin;
+const c2sid c2sid_MAX = guc_c2s_end;
+const int c2sid_ARRAYSIZE = c2sid_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* c2sid_descriptor();
+inline const ::std::string& c2sid_Name(c2sid value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    c2sid_descriptor(), value);
+}
+inline bool c2sid_Parse(
+    const ::std::string& name, c2sid* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<c2sid>(
+    c2sid_descriptor(), name, value);
+}
+// ===================================================================
 
 class notify : public ::google::protobuf::Message {
  public:
@@ -543,54 +473,6 @@ class people : public ::google::protobuf::Message {
 
 
 // ===================================================================
-
-// head
-
-// required int32 id = 1;
-inline bool head::has_id() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void head::set_has_id() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void head::clear_has_id() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void head::clear_id() {
-  id_ = 0;
-  clear_has_id();
-}
-inline ::google::protobuf::int32 head::id() const {
-  return id_;
-}
-inline void head::set_id(::google::protobuf::int32 value) {
-  set_has_id();
-  id_ = value;
-}
-
-// required int32 size = 2;
-inline bool head::has_size() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void head::set_has_size() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void head::clear_has_size() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void head::clear_size() {
-  size_ = 0;
-  clear_has_size();
-}
-inline ::google::protobuf::int32 head::size() const {
-  return size_;
-}
-inline void head::set_size(::google::protobuf::int32 value) {
-  set_has_size();
-  size_ = value;
-}
-
-// -------------------------------------------------------------------
 
 // notify
 
@@ -1056,6 +938,10 @@ people::mutable_skills() {
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PB::c2sid>() {
+  return ::PB::c2sid_descriptor();
+}
 
 }  // namespace google
 }  // namespace protobuf
