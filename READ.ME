@@ -9,28 +9,3 @@ ev1.cpp:57:36: error: cannot convert ‘GUC::pack_mgr::test_guc_people_handle’
 7:c++ 函数指针 类函数指针 类静态函数指针 类虚函数指针 
  http://www.runoob.com/w3cnote/cpp-func-pointer.html
 
-
-
-
-
-
-
-
-
-#####################################################
-####################################################
-Q1:运行ev1时报错
-error while loading shared libraries: libev.so.4
-
-原因未找到共享连接库,可是在/usr/local/lib下面有的
-解决方案:查看共享连接库配置数据 
-cat /etc/Id.so.conf 
-吧/usr/loccal/lib目录放入配置中
-echo "/usr/local/lib" >> /etc/Id.so.conf
-然后执行
-ldconfg
-
-再次运行 ev1 就可以找到libev.so.4这个动态库了。
-
-
-Q2:git clone问题。使用ssh权限错误的话，使用htpps方式即可
