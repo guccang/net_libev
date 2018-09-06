@@ -2,3 +2,32 @@
 2: 下载protobuf-2.5.0
 3: 运行make生成ev1 client
 4：运行ev1,client，发送接收消息
+
+
+
+
+
+
+
+
+
+#####################################################
+####################################################
+Q1:运行ev1时报错
+error while loading shared libraries: libev.so.4
+
+原因未找到共享连接库,可是在/usr/local/lib下面有的
+解决方案:查看共享连接库配置数据 
+cat /etc/Id.so.conf 
+吧/usr/loccal/lib目录放入配置中
+echo "/usr/local/lib" >> /etc/Id.so.conf
+然后执行
+ldconfg
+
+再次运行 ev1 就可以找到libev.so.4这个动态库了。
+
+
+Q2:git clone问题。使用ssh权限错误的话，使用htpps方式即可
+
+
+
