@@ -1,22 +1,40 @@
-vpath=./pb
-CINCLUDES=-I./pb -I/usr/include/google/protobuf/stubs/ 
-all: ev1 client
+#把所有的目录都做成变量,方便修改和移植
+BIN=./bin
+SRC=$2
+SRCCC=./pb
+INC=-I./include -I./pb
+OBJ=./obj
 
-ev1:ev1.o net.pb.o
-	g++ -lev -lprotobuf -o ev1 ev1.o net.pb.o $(CINCLUDES)
+#提前所有源文件 (*.cpp) 和所有中间文件(*.o)
+SOURCE=${wildcard ${SRC}/*.cpp}
+SOURCECC=${wildcard ${SRCCC}/*.cc}
 
-ev1.o:ev1.cpp 
-	g++ -c ev1.cpp -g $(CINCLUDES)
+OBJECT=${patsubst %.cpp,${OBJ}/%.o,${notdir ${SOURCE}}}
+OBJECT+=${patsubst %.cc,${OBJ}/%.o,${notdir ${SOURCECC}}}
 
-client:client.o net.pb.o	
-	g++ -o client client.o net.pb.o -lprotobuf $(CINCLUDES)  
+#test:
+#	echo $(SROUCECC)
+#	echo $(SROUCE)
+#	echo $(OBJECT)
 
-client.o:client.cpp
-	g++ -c -g client.cpp -g  $(CINCLUDES)
+#设置最后目标文件
+TARGET=$1
+BIN_TARGET=${BIN}/${TARGET}
 
-net.pb.o:./pb/net.pb.cc
-	g++ -c ./pb/net.pb.cc -g $(CINCLUDES)
+CC=g++
+CFLAGS=-g -Wall ${INC}
+
+#用所有中间文件生成目标文件,规则中可以用$^替换掉${OBJECT}
+${BIN_TARGET}:${OBJECT} ${OBJECT_CLIENT}
+	$(CC) -lev -lprotobuf -o $@ ${OBJECT} ${OBJECT_CLIENT}
+
+${OBJ}/%.o:${SRC}/%.cpp
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+${OBJ}/%.o:${SRCCC}/%.cc
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+.PHONY:clean
 clean:
-	rm -f ev1 client *.o
-
-
+	find $(OBJ) -name *.o | xargs rm -rf
+	rm -rf $(BIN)/*

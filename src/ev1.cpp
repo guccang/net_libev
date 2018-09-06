@@ -55,10 +55,15 @@ namespace GUC
 		std::cout<<"handle id:"<<id<<std::endl;
 		def_itr itr = handles_map.find((PB::c2sid)id);
 		if(itr != handles_map.end())
+		{
 			(this->*handles_map[(PB::c2sid)id])(id,buf,len);
+			return true;
+		}
 		else 
+		{
 			std::cout<<"handle not find id:"<<id<<std::endl;
-
+			return false;
+		}
 	}
 	pack_mgr::pack_mgr()
 	{
@@ -246,7 +251,6 @@ namespace GUC
 		if(BLEN(tail,head)< len+HEAD_LEN)
 			return RBLEN(tail,head);
 
-		int i = 0,j=len;
 		OUT(head,HEAD_LEN);
 		do 
 		{
@@ -377,7 +381,6 @@ namespace GUC
 	{
 		loop = ev_default_loop(0);
 		struct sockaddr_in addr;
-		int addr_len = sizeof(addr);
 
 		//创建socket连接
 		sd = socket(PF_INET, SOCK_STREAM, 0);
