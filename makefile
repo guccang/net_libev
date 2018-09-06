@@ -2,15 +2,18 @@
 BIN=./bin
 SRC=$2
 SRCCC=./pb
+SRCNET=./src_net
 INC=-I./include -I./pb
 OBJ=./obj
 
 #提前所有源文件 (*.cpp) 和所有中间文件(*.o)
 SOURCE=${wildcard ${SRC}/*.cpp}
 SOURCECC=${wildcard ${SRCCC}/*.cc}
+SOURCENET=${wildcard ${SRCNET}/*.cpp}
 
 OBJECT=${patsubst %.cpp,${OBJ}/%.o,${notdir ${SOURCE}}}
 OBJECT+=${patsubst %.cc,${OBJ}/%.o,${notdir ${SOURCECC}}}
+OBJECT+=${patsubst %.cpp,${OBJ}/%.o,${notdir ${SOURCENET}}}
 
 #test:
 #	echo $(SROUCECC)
@@ -29,6 +32,9 @@ ${BIN_TARGET}:${OBJECT}
 	$(CC) -lev -lprotobuf -o $@ ${OBJECT}
 
 ${OBJ}/%.o:${SRC}/%.cpp
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+${OBJ}/%.o:${SRCNET}/%.cpp
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 ${OBJ}/%.o:${SRCCC}/%.cc
