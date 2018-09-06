@@ -25,8 +25,8 @@ CC=g++
 CFLAGS=-g -Wall ${INC}
 
 #用所有中间文件生成目标文件,规则中可以用$^替换掉${OBJECT}
-${BIN_TARGET}:${OBJECT} ${OBJECT_CLIENT}
-	$(CC) -lev -lprotobuf -o $@ ${OBJECT} ${OBJECT_CLIENT}
+${BIN_TARGET}:${OBJECT}
+	$(CC) -lev -lprotobuf -o $@ ${OBJECT}
 
 ${OBJ}/%.o:${SRC}/%.cpp
 	$(CC) $(CFLAGS) -o $@ -c $<
