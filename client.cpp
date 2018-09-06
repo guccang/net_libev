@@ -14,6 +14,10 @@
 #define SKILL_COUNT (5)
 namespace GUC
 {
+	/*
+ *
+ *	客户端socket
+ * 	*/
 	class socket_tcp
 	{
 		public:
@@ -63,9 +67,14 @@ namespace GUC
 		::close(_sock);	
 	}
 
+	/*
+ *	protobuf 包序列化反序列化
+ *    */
 	class pkg_serialize
 	{
 		public:
+			// 发送指定的protobuf数据包,
+			// 包头和包体
 			template<typename T>
 				int sendpack(
 						int socket_client,
@@ -121,6 +130,7 @@ namespace GUC
 		}
 }
 
+//测试发送 guc_test_people包
 void test_set_people(GUC::head &h,PB::people &body,int cnt,std::stringstream &ss,int skillnum)
 {
 	h.id=(int)PB::guc_test_people;

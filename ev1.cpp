@@ -18,28 +18,36 @@
 #define INDEX(l) ((l)%BUFFER_SIZE)
 #define IN(t,n) (t=((t+n)%BUFFER_SIZE))
 #define OUT(h,n) (h=((h+n)%BUFFER_SIZE))
-void read_cb(struct ev_loop *loop, struct ev_io *watcher, int revents);
-void accept_cb(struct ev_loop *loop, struct ev_io *watcher, int revents);
-void timer_beat(struct ev_loop *loop, struct ev_timer *watcher, int revents);
-typedef  char   byte;
-typedef  void (*ev_cb)(struct ev_loop* , struct ev_io*,int);
-long cnt = 0;
+void read_cb(struct ev_loop *loop, struct ev_io *watcher, int revents); // libev 有数据后回调
+void accept_cb(struct ev_loop *loop, struct ev_io *watcher, int revents);// libev 有链接请求后回调
+void timer_beat(struct ev_loop *loop, struct ev_timer *watcher, int revents);// libev 定时器回调
+typedef  char   byte;// 定义byte
+typedef  void (*ev_cb)(struct ev_loop* , struct ev_io*,int); // libev 回调函数声明
+long cnt = 0;// 收包数量
 
 
 namespace GUC
 {
+	/*
+ *	根据消息id 处理消息
+ *
+ * */
 	class pack_mgr
 	{
 		public:
 			pack_mgr();
 			~pack_mgr();
- 
+			// 定义消息处理函数指针
 			typedef bool (pack_mgr::*PH)(int ,byte* ,int);
+			// 分发消息处理函数
 			bool process(int id,byte *buf,int len);
 		private:
+			// test_guc_people消息处理
 			bool test_guc_people_handle(int id,byte* buf,int len);
 		private:
+			// 消息id-消息处理函数映射
 			std::map<PB::c2sid,PH> handles_map;	
+			// 定义迭代器别名
 			typedef std::map<PB::c2sid,PH>::iterator def_itr;
 	};
 	bool pack_mgr::process(int id,byte* buf,int len)
@@ -50,10 +58,10 @@ namespace GUC
 			(this->*handles_map[(PB::c2sid)id])(id,buf,len);
 		else 
 			std::cout<<"handle not find id:"<<id<<std::endl;
-		
+
 	}
 	pack_mgr::pack_mgr()
- 	{
+	{
 		handles_map[PB::guc_test_people] = &pack_mgr::test_guc_people_handle;
 	}
 	pack_mgr::~pack_mgr()
@@ -85,22 +93,35 @@ namespace GUC
 		return true;
 	}
 
+	/*
+ *	客户端socket维护，tcp读写buff维护
+ * */
 	class session
 	{
 		public:
+			// 处理tcp缓存中的数据，交给pack_mgr处理
 			int process_packet();
+			// 读取内核tcp数据，放入用户缓冲区
 			int read_stream();
+			// 关闭socket,释放资源
 			void close();
 			session();
 			~session();
+			// 初始化libev数据 
 			void init(struct ev_io* w_client,ev_cb read,int fd,int revents);
+			// 开始libev监听
 			void start(struct ev_loop* loop,struct ev_io* w_client);
 		private:
+			// 消息处理类
 			pack_mgr package_handler;	
+			// 用户缓冲区,循环buff
 			byte recvbuff[BUFFER_SIZE];
+			// 循环buffer尾指针
 			int tail;
+			// 循环buffer头指针
 			int head;
 		public:
+			// libev io watcher
 			struct ev_io* w_client;
 	};
 
@@ -219,7 +240,7 @@ namespace GUC
 		int len = h.data_len;
 		//std::cout<<"headlen:"<<len<<std::endl;
 		//std::cout<<"headId:"<<h.id<<std::endl;
-		if(len>BUFFER_SIZE)
+		if(len+HEAD_LEN>BUFFER_SIZE-1)
 			return -1;
 
 		if(BLEN(tail,head)< len+HEAD_LEN)
@@ -246,29 +267,52 @@ namespace GUC
 		return RBLEN(tail,head);
 	}  
 
+	/*
+ *  服务器tcp socket 实现
+ *  通过libev库，监听，接受，发送数据
+ * */
+
 	class socket_tcp_s
 	{
 		public:
 			socket_tcp_s();
 			~socket_tcp_s();
+			// 初始化,socket和libev
 			int init(short port);
+			// 开始监听连接，处理消息
 			void run();
+			// 通过socket描述符查找session数据
 			session* find_session(int fd);
+			// accept后加入session维护
 			bool add_session(int fd,session* se);
+			// 关闭socket后移除session
 			bool del_session(int fd);
+			// 是否有指定描述符session
 			bool has_session(int fd);
+			// 清理socket文件描述符对应的libev资源
 			int freelibev(int fd);
+			// 关闭
+			void close();
 		private:
+			// 服务器socket文件描述符
 			int sd;
-			//一个io watcher
+			//一个io watcher,用于接受客户端连接
 			struct ev_io socket_accept;
 			//一个timer watcher
 			struct ev_timer timeout_w;
+			// socket文件描述符和对应的session
 			std::map<int,session*> _session_map;
+			// 定义迭代器别名
 			typedef std::map<int,session*>::iterator def_itr;
 		public:
+			// libev loop
 			struct ev_loop *loop;
 	};
+	void socket_tcp_s::close()
+	{
+		for(def_itr itr=_session_map.begin();itr!=_session_map.end();)
+			_session_map.erase(itr++);
+	}
 	int  socket_tcp_s::freelibev(int fd)
 	{
 		session* se = find_session(fd);
@@ -388,6 +432,7 @@ int main()
 	if(service->init(8888) != 0)
 		return -1;
 	service->run();
+	service->close();
 	return 0;
 }
 
